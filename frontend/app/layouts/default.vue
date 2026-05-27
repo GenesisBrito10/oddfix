@@ -19,6 +19,8 @@
 
     <BottomNav :filter-count="filterCount" @filter="filterSheetOpen = true" @more="moreOpen = true" />
 
+    <UpdateToast />
+
     <button v-if="!isAffiliate" class="floating-filter" @click="filterSheetOpen = true">
       <SlidersHorizontal :size="15" />
       Filtrar
@@ -64,6 +66,7 @@ import AppHeader from '~/components/layout/AppHeader.vue'
 import AffiliateSidebar from '~/components/layout/AffiliateSidebar.vue'
 import BottomNav from '~/components/layout/BottomNav.vue'
 import SidebarFilters from '~/components/layout/SidebarFilters.vue'
+import UpdateToast from '~/components/UpdateToast.vue'
 import type { FilterState } from '~/composables/useFilters'
 
 const route = useRoute()

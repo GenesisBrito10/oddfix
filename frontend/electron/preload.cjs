@@ -23,4 +23,10 @@ contextBridge.exposeInMainWorld('oddfixElectron', {
     ipcRenderer.on('oddfix-bookmaker-click-captured', listener)
     return () => ipcRenderer.removeListener('oddfix-bookmaker-click-captured', listener)
   },
+  onUpdate: (callback) => {
+    const listener = (_event, payload) => callback(payload)
+    ipcRenderer.on('oddfix-update', listener)
+    return () => ipcRenderer.removeListener('oddfix-update', listener)
+  },
+  installUpdate: () => ipcRenderer.invoke('oddfix-install-update'),
 })

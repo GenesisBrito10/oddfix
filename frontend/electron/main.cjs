@@ -168,13 +168,27 @@ function setupAutoUpdates() {
   try {
     const { autoUpdater } = require('electron-updater')
     autoUpdater.autoDownload = true
-    autoUpdater.on('update-available', (info) => sendToRenderer('oddfix-update', { state: 'available', version: info.version }))
-    autoUpdater.on('update-downloaded', (info) => sendToRenderer('oddfix-update', { state: 'downloaded', version: info.version }))
-    autoUpdater.on('error', (error) => console.error('[oddfix] updater:', error?.message || error))
-    // Checks GitHub Releases (latest.yml), downloads in background, installs on quit.
-    autoUpdater.checkForUpdatesAndNotify()
+    autoUpdater.autoInstallOnAppQuit = true
+
+    const notify = (payload) => sendToRenderer('oddfix-update', payload)
+
+    autoUpdater.on('checking-for-update', () => notify({ state: 'checking' }))
+    autoUpdater.on('update-available', (info) => notify({ state: 'available', version: info.version }))
+    autoUpdater.on('update-not-available', () => notify({ state: 'none' }))
+    autoUpdater.on('download-progress', (progress) =>
+      notify({ state: 'downloading', percent: Math.round(progress.percent || 0) }),
+    )
+    autoUpdater.on('update-downloaded', (info) => notify({ state: 'downloaded', version: info.version }))
+    autoUpdater.on('error', (error) => {
+      logLine(`updater erro: ${error?.message || error}`)
+      notify({ state: 'error', message: String(error?.message || error) })
+    })
+
+    const check = () => autoUpdater.checkForUpdates().catch((error) => logLine(`check falhou: ${error?.message || error}`))
+    check() // no boot
+    setInterval(check, 5 * 60 * 1000) // e a cada 5 min
   } catch (error) {
-    console.error('[oddfix] auto-update indisponivel:', error?.message || error)
+    logLine(`auto-update indisponivel: ${error?.message || error}`)
   }
 }
 
@@ -784,6 +798,18 @@ ipcMain.handle('oddfix-open-site', async (_event, siteKey) => {
   if (!site) {
     launchChromeWithUserProfile()
     return
+  }
+})
+
+// User clicked "Reiniciar agora" on the update toast.
+ipcMain.handle('oddfix-install-update', () => {
+  if (!app.isPackaged) {
+    return
+  }
+  try {
+    require('electron-updater').autoUpdater.quitAndInstall()
+  } catch (error) {
+    logLine(`quitAndInstall: ${error?.message || error}`)
   }
 })
 

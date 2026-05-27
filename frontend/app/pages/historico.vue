@@ -150,6 +150,9 @@ import type {
 import { formatCurrency } from '~/data/surebets'
 
 const STATUSES: SurebetResultValue[] = ['GREEN', 'RED', 'VOID', 'CANCELLED']
+// Backend still uses PENDING as the initial status, though it's outside the settable
+// SurebetResultValue union — use this typed sentinel to compare/set it.
+const PENDING = 'PENDING' as SurebetResultValue
 
 const { listHistory, updateSurebetStatus, updateLegResult } = useSurebetHistory()
 
@@ -223,10 +226,10 @@ const outcomeFor = (item: HistoryItem): Outcome => {
   const total = stakeFor(item)
   if (item.status === 'CANCELLED') return { state: 'excluded', profit: 0, staked: 0 }
   if (item.status === 'VOID') return { state: 'void', profit: 0, staked: 0 }
-  if (item.status === 'PENDING') return { state: 'pending', profit: 0, staked: 0 }
+  if (item.status === PENDING) return { state: 'pending', profit: 0, staked: 0 }
 
   // GREEN/RED: usa o resultado das pernas quando todas marcadas; senão cai no status geral.
-  const legsResolved = item.legs.length > 0 && item.legs.every((leg) => leg.result !== 'PENDING')
+  const legsResolved = item.legs.length > 0 && item.legs.every((leg) => leg.result !== PENDING)
   if (legsResolved) {
     const distribution = balancedStakes(item, total)
     const returns = item.legs.reduce((sum, leg, index) => sum + legReturn(leg, distribution[index] ?? 0), 0)
@@ -295,7 +298,7 @@ const load = async () => {
   try {
     const res = await listHistory({
       // Backend só conhece os status crus; "Finalizadas" = qualquer não-PENDING (filtra no cliente).
-      status: statusFilter.value === 'PENDING' ? 'PENDING' : undefined,
+      status: statusFilter.value === 'PENDING' ? PENDING : undefined,
       type: typeFilter.value || undefined,
       search: search.value.trim() || undefined,
       sort: 'registeredAt_desc',
@@ -303,7 +306,7 @@ const load = async () => {
       limit: 50,
     })
     items.value = statusFilter.value === 'FINALIZED'
-      ? res.items.filter((item) => item.status !== 'PENDING')
+      ? res.items.filter((item) => item.status !== PENDING)
       : res.items
     pagination.value = res.pagination
   } catch {
@@ -337,9 +340,9 @@ const setStatus = async (item: HistoryItem, status: SurebetResultValue) => {
 // Overall status is just Pendente vs Finalizado. The win/loss detail comes from the
 // per-leg results + computed profit; "Finalizado" stores a backend status derived from
 // that profit (GREEN/RED/VOID) so the status filter and counts remain valid.
-const isFinalized = (item: HistoryItem): boolean => item.status !== 'PENDING'
+const isFinalized = (item: HistoryItem): boolean => item.status !== PENDING
 
-const setPending = (item: HistoryItem) => void setStatus(item, 'PENDING')
+const setPending = (item: HistoryItem) => void setStatus(item, PENDING)
 
 const finalize = (item: HistoryItem) => {
   const total = stakeFor(item)

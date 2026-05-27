@@ -28,6 +28,13 @@ export interface BookmakerClickPayload {
   clickedAt: string
 }
 
+export interface UpdatePayload {
+  state: 'checking' | 'available' | 'downloading' | 'downloaded' | 'none' | 'error'
+  version?: string
+  percent?: number
+  message?: string
+}
+
 declare global {
   interface Window {
     oddfixElectron?: {
@@ -38,6 +45,8 @@ declare global {
       onCapture?: (callback: (payload: BookmakerClickPayload) => void) => () => void
       onStatus?: (callback: (payload: { siteKey: string; state: string; message: string }) => void) => () => void
       onBookmakerClick?: (callback: (payload: BookmakerClickPayload) => void) => () => void
+      onUpdate?: (callback: (payload: UpdatePayload) => void) => () => void
+      installUpdate?: () => Promise<void>
     }
   }
 }
