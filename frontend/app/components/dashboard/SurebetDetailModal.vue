@@ -1,7 +1,7 @@
 <template>
-  <Teleport to="body">
+  <Teleport to="body" :disabled="inline">
     <Transition name="fade">
-      <div v-if="surebet" class="modal-layer">
+      <div v-if="surebet" class="modal-layer" :class="{ inline }">
         <aside class="detail-panel">
           <header class="detail-head">
             <div class="detail-actions">
@@ -128,7 +128,7 @@ interface CalculatedLeg extends BetLeg {
   legReturn: number
 }
 
-const props = defineProps<{ surebet: Surebet | null }>()
+const props = defineProps<{ surebet: Surebet | null; inline?: boolean }>()
 const emit = defineEmits<{ close: []; dismiss: [] }>()
 const { lastClick, openSurebetBookmakers, startBookmakerClickListener } = useDesktopBookmakers()
 
@@ -303,6 +303,23 @@ const calculatedLegs = computed<CalculatedLeg[]>(() => {
   box-shadow: 24px 0 64px rgba(0, 0, 0, 0.5);
   padding: 32px 24px;
   pointer-events: auto;
+}
+
+/* Inline mode (separate calculator window): flow in the page so the WINDOW scrolls
+   naturally — no fixed panel, opens at the top, no leftover empty space. */
+.modal-layer.inline {
+  position: static;
+  pointer-events: auto;
+}
+.modal-layer.inline .detail-panel {
+  position: static;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .detail-head {

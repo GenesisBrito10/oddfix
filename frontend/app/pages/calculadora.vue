@@ -1,6 +1,6 @@
 <template>
   <div class="calc-page">
-    <SurebetDetailModal :surebet="selected" @close="closeWindow" @dismiss="closeWindow" />
+    <SurebetDetailModal :surebet="selected" inline @close="closeWindow" @dismiss="closeWindow" />
     <div v-if="!selected" class="calc-loading">Carregando operação…</div>
   </div>
 </template>
@@ -10,7 +10,8 @@ import SurebetDetailModal from '~/components/dashboard/SurebetDetailModal.vue'
 import type { Surebet } from '~/data/surebets'
 import { useSurebetsApi } from '~/composables/useSurebetsApi'
 
-// Standalone OS window (opened by Electron). No app chrome — just the calculator.
+// Standalone OS window (opened by Electron). No app chrome — just the calculator,
+// rendered inline so the window scrolls naturally and opens at the top.
 definePageMeta({ layout: false })
 
 const route = useRoute()
@@ -27,10 +28,6 @@ const selected = computed<Surebet | null>(() => live.value ?? snapshot.value)
 const closeWindow = () => {
   if (import.meta.client) window.close()
 }
-
-// Mark the document so the (page-split) override below only hits THIS window.
-onMounted(() => import.meta.client && document.documentElement.classList.add('calc-window'))
-onUnmounted(() => import.meta.client && document.documentElement.classList.remove('calc-window'))
 </script>
 
 <style scoped>
@@ -43,21 +40,5 @@ onUnmounted(() => import.meta.client && document.documentElement.classList.remov
   place-items: center;
   min-height: 100vh;
   color: var(--muted);
-}
-</style>
-
-<!-- Non-scoped: the detail panel teleports to <body>, so scoped styles can't reach it.
-     Gated by .calc-window (set above) so it only fills THIS window, never the main one. -->
-<style>
-.calc-window .modal-layer {
-  pointer-events: auto;
-}
-.calc-window .detail-panel {
-  inset: 0 !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
 }
 </style>
