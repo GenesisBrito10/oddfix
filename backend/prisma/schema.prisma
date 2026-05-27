@@ -1,0 +1,181 @@
+// Prisma schema.
+// Fase 2: User. Fase 3: BetBurger catalog (Bookmaker, Sport, MarketType) +
+// user-registered surebets (RegisteredSurebet, RegisteredSurebetLeg).
+// Postgres holds only permanent data — temporary BetBurger surebets live in
+// Redis (Fase 6+), never here.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum SurebetType {
+  LIVE
+  PREMATCH
+}
+
+enum RegisteredSurebetStatus {
+  PENDING
+  GREEN
+  RED
+  VOID
+  CANCELLED
+}
+
+enum SurebetLegResult {
+  PENDING
+  GREEN
+  RED
+  VOID
+  CANCELLED
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         UserRole @default(USER)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  registeredSurebets RegisteredSurebet[]
+
+  @@index([email])
+  @@map("users")
+}
+
+// Bookmaker resolved from BetBurger (user_bookmakers + directories.bookmaker_clones).
+// cloneId / url may be null when resolution falls back.
+model Bookmaker {
+  id                  String  @id @default(uuid())
+  externalBookmakerId Int     @unique @map("external_bookmaker_id")
+  cloneId             Int?    @map("clone_id")
+  name                String
+  url                 String?
+  domain              String?
+  active              Boolean @default(true)
+  rawJson             Json?   @map("raw_json")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([name])
+  @@index([cloneId])
+  @@map("bookmakers")
+}
+
+// Sport from directories.sports.
+model Sport {
+  id              String  @id @default(uuid())
+  externalSportId Int     @unique @map("external_sport_id")
+  name            String
+  categoryId      Int?    @map("category_id")
+  categoryName    String? @map("category_name")
+  rawJson         Json?   @map("raw_json")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([name])
+  @@map("sports")
+}
+
+// Market template, e.g. 17 = "Asian Handicap1(%s)".
+model MarketType {
+  id                   String @id @default(uuid())
+  externalMarketTypeId Int    @unique @map("external_market_type_id")
+  nameTemplate         String @map("name_template")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([nameTemplate])
+  @@map("market_types")
+}
+
+// A surebet the user chose to register. NOT every temporary BetBurger surebet —
+// only created when the user clicks "register" (Fase 9). rawSnapshot freezes the
+// opportunity for audit.
+model RegisteredSurebet {
+  id     String @id @default(uuid())
+  userId String @map("user_id")
+
+  arbHash         String @map("arb_hash")
+  externalEventId BigInt @map("external_event_id")
+
+  type    SurebetType
+  percent Decimal?    @db.Decimal(10, 4)
+  arbType String?     @map("arb_type")
+  minKoef Decimal?    @map("min_koef") @db.Decimal(10, 4)
+  maxKoef Decimal?    @map("max_koef") @db.Decimal(10, 4)
+
+  eventName                  String  @map("event_name")
+  leagueName                 String? @map("league_name")
+  sportId                    Int?    @map("sport_id")
+  sportName                  String? @map("sport_name")
+  team1Name                  String? @map("team1_name")
+  team2Name                  String? @map("team2_name")
+  currentScoreWhenRegistered String? @map("current_score_when_registered")
+
+  status RegisteredSurebetStatus @default(PENDING)
+
+  rawSnapshot Json? @map("raw_snapshot")
+
+  registeredAt DateTime @default(now()) @map("registered_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  legs RegisteredSurebetLeg[]
+
+  @@index([userId, registeredAt])
+  @@index([userId, status])
+  @@index([arbHash])
+  @@index([externalEventId])
+  @@index([type])
+  @@index([registeredAt])
+  @@map("registered_surebets")
+}
+
+// One leg/bet/house of a registered surebet.
+model RegisteredSurebetLeg {
+  id                  String @id @default(uuid())
+  registeredSurebetId String @map("registered_surebet_id")
+
+  legIndex      Int    @map("leg_index")
+  externalBetId String @map("external_bet_id")
+
+  externalBookmakerId Int?    @map("external_bookmaker_id")
+  bookmakerName       String  @map("bookmaker_name")
+  bookmakerUrl        String? @map("bookmaker_url")
+
+  odd Decimal @db.Decimal(10, 4)
+
+  marketTypeId Int?     @map("market_type_id")
+  marketName   String   @map("market_name")
+  marketParam  Decimal? @map("market_param") @db.Decimal(10, 4)
+
+  result SurebetLegResult @default(PENDING)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  registeredSurebet RegisteredSurebet @relation(fields: [registeredSurebetId], references: [id], onDelete: Cascade)
+
+  @@unique([registeredSurebetId, legIndex])
+  @@index([registeredSurebetId])
+  @@index([result])
+  @@index([externalBookmakerId])
+  @@index([marketTypeId])
+  @@map("registered_surebet_legs")
+}

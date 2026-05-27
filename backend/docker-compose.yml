@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: oddfix_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: oddfix_db
+      POSTGRES_USER: oddfix_user
+      POSTGRES_PASSWORD: oddfix_pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - oddfix_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U oddfix_user -d oddfix_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: oddfix_redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - oddfix_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  oddfix_pg_data:
+  oddfix_redis_data:

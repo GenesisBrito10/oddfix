@@ -1,0 +1,71 @@
+# Production compose: backend + postgres + redis.
+# Postgres/Redis are NOT published to the host (no `ports:`) — only reachable on
+# the internal network. The backend port is bound to localhost for Nginx to
+# proxy. Provide secrets via .env (never committed). In .env, point
+# DATABASE_URL at host "postgres" and REDIS_HOST at "redis".
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: oddfix-backend:latest
+    container_name: oddfix_backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+    # Run migrations, then start. Safe for a single instance.
+    command: sh -c "pnpm prisma migrate deploy && node dist/main.js"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      # Bind to loopback only; Nginx (host) proxies to it.
+      - "127.0.0.1:3001:3001"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3001/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: oddfix_postgres_prod
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-oddfix_db}
+      POSTGRES_USER: ${POSTGRES_USER:-oddfix_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-oddfix_pass}
+    volumes:
+      - oddfix_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-oddfix_user} -d ${POSTGRES_DB:-oddfix_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: oddfix_redis_prod
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - oddfix_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  oddfix_pg_data:
+  oddfix_redis_data:

@@ -1,0 +1,132 @@
+/* ────────────────────────────────────────────────────────────
+   Oddfix · Design tokens
+   ──────────────────────────────────────────────────────────── */
+
+:root {
+  /* ── Surfaces ─────────────────────────────────────────────── */
+  --bg:           #070A0F;
+  --bg-2:         #080B10;
+  --chrome:       #0B1018;
+  --chrome-2:     #10151C;
+  --card:         #121821;
+  --card-2:       #151C25;
+  --card-3:       #18212B;
+  --inner:        #090D12;
+  --inner-2:      #0C1117;
+
+  /* ── Borders ──────────────────────────────────────────────── */
+  --border:           rgba(148, 163, 184, 0.10);
+  --border-strong:    rgba(148, 163, 184, 0.18);
+  --border-mint:      rgba(141, 255, 199, 0.45);
+  --border-mint-soft: rgba(141, 255, 199, 0.18);
+
+  /* ── Accents ──────────────────────────────────────────────── */
+  --mint:        #8DFFC7;
+  --mint-soft:   rgba(141, 255, 199, 0.12);
+  --green:       #20E69A;
+  --green-soft:  rgba(32, 230, 154, 0.12);
+  --green-rim:   rgba(32, 230, 154, 0.32);
+  --odds:        #DDF76E;
+  --odds-2:      #D9F875;
+  --amber:       #F6C76B;
+  --amber-soft:  rgba(246, 199, 107, 0.12);
+  --red:         #F87171;
+  --red-soft:    rgba(248, 113, 113, 0.10);
+
+  /* ── Text ─────────────────────────────────────────────────── */
+  --t1: #F4F7FA;
+  --t2: #8B95A5;
+  --t3: #596272;
+  --t4: #3A4150;
+
+  /* ── Type ─────────────────────────────────────────────────── */
+  --f-sans: 'Inter', 'SF Pro Display', -apple-system, system-ui, sans-serif;
+  --f-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
+
+  /* ── Radii ────────────────────────────────────────────────── */
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 18px;
+
+  /* ── Shadows ──────────────────────────────────────────────── */
+  --shadow-card: 0 1px 0 rgba(255,255,255,0.02) inset,
+                 0 12px 32px rgba(0,0,0,0.45),
+                 0 2px 4px rgba(0,0,0,0.30);
+  --shadow-hover: 0 1px 0 rgba(141,255,199,0.08) inset,
+                  0 18px 48px rgba(0,0,0,0.55),
+                  0 0 0 1px rgba(141,255,199,0.18),
+                  0 0 32px rgba(32,230,154,0.10);
+  --shadow-glow:  0 0 0 1px rgba(141,255,199,0.35),
+                  0 0 24px rgba(32,230,154,0.18);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--f-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: var(--t1);
+  font-feature-settings: 'cv11', 'ss01', 'ss03';
+}
+
+/* numbers always tabular */
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* ── Animations ─────────────────────────────────────────────── */
+@keyframes ofx-pulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%     { opacity: 0.45; transform: scale(0.92); }
+}
+@keyframes ofx-pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(32,230,154,0.55); }
+  100% { box-shadow: 0 0 0 7px rgba(32,230,154,0); }
+}
+@keyframes ofx-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes ofx-flash {
+  0%   { background: rgba(141,255,199,0.18); }
+  100% { background: transparent; }
+}
+@keyframes ofx-marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes ofx-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes ofx-scan {
+  0%, 100% { transform: translateX(-100%); }
+  50%      { transform: translateX(100%); }
+}
+
+.ofx-pulse-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--green);
+  position: relative;
+  flex-shrink: 0;
+}
+.ofx-pulse-dot::after {
+  content: ''; position: absolute; inset: 0;
+  border-radius: 50%;
+  animation: ofx-pulse-ring 1.6s ease-out infinite;
+}
+
+/* Scrollbars (webkit) */
+.ofx-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+.ofx-scroll::-webkit-scrollbar-thumb {
+  background: rgba(148,163,184,0.18);
+  border-radius: 3px;
+}
+.ofx-scroll::-webkit-scrollbar-track { background: transparent; }
+
+/* Focus ring */
+.ofx-focus:focus-visible {
+  outline: 2px solid var(--mint);
+  outline-offset: 2px;
+}

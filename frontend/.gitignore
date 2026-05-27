@@ -1,0 +1,31 @@
+# Nuxt dev/build outputs
+.output
+.data
+.nuxt
+.nitro
+.cache
+dist
+dist-electron
+
+# Generated at build from ODDFIX_BACKEND_URL — never commit
+electron/app-config.json
+
+# esbuild output of the Electron main process
+electron/main.bundle.cjs
+
+# Node dependencies
+node_modules
+
+# Logs
+logs
+*.log
+
+# Misc
+.DS_Store
+.fleet
+.idea
+
+# Local env files
+.env
+.env.*
+!.env.example

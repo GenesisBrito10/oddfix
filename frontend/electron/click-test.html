@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:;"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OddFix Chrome Click Capture</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0d1117;
+        --panel: #151b23;
+        --panel-2: #1f2937;
+        --line: #303946;
+        --text: #e6edf3;
+        --muted: #94a3b8;
+        --accent: #20c997;
+        --accent-2: #4dabf7;
+        --danger: #ff6b6b;
+        --warning: #ffd43b;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-width: 1180px;
+        min-height: 760px;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      .app {
+        display: grid;
+        grid-template-rows: auto auto minmax(0, 1fr);
+        height: 100vh;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        min-height: 64px;
+        padding: 12px 18px;
+        border-bottom: 1px solid var(--line);
+        background: #111820;
+      }
+
+      .brand {
+        display: grid;
+        gap: 4px;
+        min-width: 0;
+      }
+
+      .brand strong {
+        font-size: 15px;
+        line-height: 1.2;
+      }
+
+      .brand span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+        flex-shrink: 0;
+      }
+
+      button {
+        height: 34px;
+        padding: 0 12px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--panel-2);
+        color: var(--text);
+        font: inherit;
+        font-size: 12px;
+        cursor: pointer;
+      }
+
+      button:hover {
+        border-color: #526173;
+        background: #273447;
+      }
+
+      .sites {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--line);
+        background: #101720;
+      }
+
+      .site {
+        display: grid;
+        gap: 12px;
+        min-width: 0;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+      }
+
+      .site-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .site-title {
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 11px;
+        white-space: nowrap;
+      }
+
+      .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: var(--muted);
+      }
+
+      .status.ready .dot {
+        background: var(--accent);
+      }
+
+      .status.loading .dot {
+        background: var(--warning);
+      }
+
+      .status.error .dot,
+      .status.closed .dot {
+        background: var(--danger);
+      }
+
+      .url {
+        overflow: hidden;
+        color: var(--muted);
+        font-size: 11px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0;
+      }
+
+      input {
+        width: 100%;
+        height: 38px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #0f1720;
+        color: var(--text);
+        padding: 0 10px;
+        font: inherit;
+        font-size: 13px;
+      }
+
+      input:focus {
+        border-color: var(--accent-2);
+        outline: 0;
+      }
+
+      .log-wrap {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        min-height: 0;
+      }
+
+      .log-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 18px;
+        border-bottom: 1px solid var(--line);
+        background: var(--panel);
+      }
+
+      .log-head strong {
+        font-size: 13px;
+      }
+
+      .log {
+        min-height: 0;
+        overflow: auto;
+        padding: 12px 18px;
+      }
+
+      .entry {
+        display: grid;
+        gap: 6px;
+        padding: 10px;
+        margin-bottom: 8px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #111820;
+      }
+
+      .entry-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .entry-site {
+        color: var(--accent);
+        font-weight: 700;
+      }
+
+      .entry-text {
+        overflow-wrap: anywhere;
+        font-size: 13px;
+        line-height: 1.35;
+      }
+
+      .entry-meta {
+        overflow-wrap: anywhere;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.35;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <div class="brand">
+          <strong>OddFix Chrome Click Capture</strong>
+          <span>O Electron abre duas janelas reais do Chrome com o mesmo perfil do usuario e escuta os cliques via DevTools Protocol.</span>
+        </div>
+        <div class="actions">
+          <button id="open-all" type="button">Abrir Chrome</button>
+          <button id="clear-log" type="button">Limpar eventos</button>
+        </div>
+      </header>
+
+      <section class="sites">
+        <article class="site" data-site="superbet">
+          <div class="site-head">
+            <div class="site-title">Superbet</div>
+            <div class="status loading" id="status-superbet"><span class="dot"></span><span>Aguardando</span></div>
+          </div>
+          <div class="url" id="url-superbet"></div>
+          <label>
+            Ultimo valor
+            <input id="value-superbet" placeholder="Clique em uma odd ou botao na janela Superbet" />
+          </label>
+          <button id="open-superbet" type="button">Abrir Superbet</button>
+        </article>
+
+        <article class="site" data-site="bet365">
+          <div class="site-head">
+            <div class="site-title">Bet365</div>
+            <div class="status loading" id="status-bet365"><span class="dot"></span><span>Aguardando</span></div>
+          </div>
+          <div class="url" id="url-bet365"></div>
+          <label>
+            Ultimo valor
+            <input id="value-bet365" placeholder="Clique em uma odd ou botao na janela Bet365" />
+          </label>
+          <button id="open-bet365" type="button">Abrir Bet365</button>
+        </article>
+      </section>
+
+      <section class="log-wrap">
+        <header class="log-head">
+          <strong>Eventos capturados</strong>
+          <span class="status ready"><span class="dot"></span><span>Mesmo perfil Chrome, janelas lado a lado</span></span>
+        </header>
+        <section class="log" id="log" aria-live="polite"></section>
+      </section>
+    </main>
+
+    <script>
+      const config = window.oddfixElectron
+
+      const sites = {
+        superbet: {
+          label: 'Superbet',
+          url: config.sites.superbet,
+          status: document.querySelector('#status-superbet'),
+          input: document.querySelector('#value-superbet'),
+          urlNode: document.querySelector('#url-superbet'),
+          open: document.querySelector('#open-superbet'),
+        },
+        bet365: {
+          label: 'Bet365',
+          url: config.sites.bet365,
+          status: document.querySelector('#status-bet365'),
+          input: document.querySelector('#value-bet365'),
+          urlNode: document.querySelector('#url-bet365'),
+          open: document.querySelector('#open-bet365'),
+        },
+      }
+
+      const log = document.querySelector('#log')
+
+      Object.entries(sites).forEach(([siteKey, site]) => {
+        site.urlNode.textContent = site.url
+        site.open.addEventListener('click', () => config.openSite(siteKey))
+      })
+
+      function setStatus(siteKey, state, text) {
+        const site = sites[siteKey]
+        if (!site) return
+
+        site.status.className = `status ${state}`
+        site.status.lastElementChild.textContent = text
+      }
+
+      function addLog(payload) {
+        const site = sites[payload.siteKey]
+        if (!site) return
+
+        const entry = document.createElement('article')
+        entry.className = 'entry'
+        entry.innerHTML = `
+          <div class="entry-top">
+            <span class="entry-site"></span>
+            <span></span>
+          </div>
+          <div class="entry-text"></div>
+          <div class="entry-meta"></div>
+        `
+
+        entry.querySelector('.entry-site').textContent = site.label
+        entry.querySelector('.entry-top span:last-child').textContent = new Date(payload.clickedAt).toLocaleTimeString()
+        entry.querySelector('.entry-text').textContent = payload.text
+        entry.querySelector('.entry-meta').textContent = `${payload.tag}${payload.role ? ` [role=${payload.role}]` : ''} - ${payload.pageUrl}`
+        log.prepend(entry)
+      }
+
+      config.onStatus((payload) => {
+        setStatus(payload.siteKey, payload.state, payload.message)
+      })
+
+      config.onCapture((payload) => {
+        const site = sites[payload.siteKey]
+        if (!site) return
+
+        site.input.value = payload.text
+        addLog(payload)
+      })
+
+      document.querySelector('#open-all').addEventListener('click', () => config.launchSites())
+
+      document.querySelector('#clear-log').addEventListener('click', () => {
+        log.replaceChildren()
+        Object.values(sites).forEach((site) => {
+          site.input.value = ''
+        })
+      })
+    </script>
+  </body>
+</html>

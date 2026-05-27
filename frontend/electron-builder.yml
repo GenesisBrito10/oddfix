@@ -1,0 +1,45 @@
+appId: com.oddfix.desktop
+productName: OddFix
+copyright: © OddFix
+
+directories:
+  output: dist-electron
+  buildResources: build
+
+# Ship ONLY the Electron runtime files (+ pruned prod deps via electron-builder).
+# The whole Nuxt UI + Nitro server is shipped as a resource (see extraResources).
+files:
+  - electron/**/*
+  - package.json
+
+# The built Nuxt app (.output) — Nitro node server + public assets. Electron's
+# main process boots .output/server/index.mjs on a local port (keeps the API proxy).
+extraResources:
+  - from: .output
+    to: output
+    filter:
+      - "**/*"
+
+asar: true
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  artifactName: ${productName}-Setup-${version}.${ext}
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowElevation: true
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false
+  shortcutName: OddFix
+
+# Auto-update source: public GitHub Releases (no token needed to download).
+publish:
+  provider: github
+  owner: GenesisBrito10
+  repo: oddfix
+  releaseType: release
