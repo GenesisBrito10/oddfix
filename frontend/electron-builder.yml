@@ -52,6 +52,8 @@ nsisWeb:
   artifactName: ${productName}-Web-Setup.${ext}
   oneClick: true
   perMachine: false
+  # oneClick installer can't let the user choose the dir — must disable (herdado do nsis).
+  allowToChangeInstallationDirectory: false
 
 # Auto-update source: public GitHub Releases (no token needed to download).
 publish:
