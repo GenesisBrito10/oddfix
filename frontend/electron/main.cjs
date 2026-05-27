@@ -200,6 +200,7 @@ function createWindow() {
     minHeight: WINDOW_MIN_HEIGHT,
     title: 'OddFix Desktop',
     backgroundColor: '#0d1117',
+    icon: path.join(__dirname, 'icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,

@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "type": "module",
   "private": true,
   "description": "OddFix desktop",
@@ -11,6 +11,7 @@
     "kill-port": "lsof -ti:3000 | xargs kill -9 2>/dev/null || true",
     "dev": "nuxt dev",
     "build:main": "node electron/build-main.cjs",
+    "icons": "node electron/gen-icon.cjs",
     "electron:click-test": "node ./electron/run-click-test.cjs",
     "electron:dev": "node ./electron/run-desktop.cjs",
     "electron:build": "node electron/gen-config.cjs && node electron/build-main.cjs && nuxt build && electron-builder --win --publish never",
@@ -21,12 +22,14 @@
   },
   "devDependencies": {
     "@microsoft/fetch-event-source": "^2.0.1",
+    "@resvg/resvg-js": "^2.6.2",
     "electron": "^42.2.0",
     "electron-builder": "^26.8.1",
     "electron-updater": "^6.8.3",
     "esbuild": "^0.28.0",
     "lucide-vue-next": "^0.511.0",
     "nuxt": "^4.4.6",
+    "png-to-ico": "^3.0.1",
     "puppeteer-core": "^25.1.0",
     "vue": "^3.5.34",
     "vue-router": "^5.0.7"

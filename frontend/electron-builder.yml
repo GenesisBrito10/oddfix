@@ -23,19 +23,35 @@ extraResources:
 asar: true
 
 win:
+  icon: build/icon.ico
   target:
     - target: nsis
       arch:
         - x64
-  artifactName: ${productName}-Setup-${version}.${ext}
+    - target: nsis-web
+      arch:
+        - x64
 
+# Full offline installer (escolhe pasta).
 nsis:
+  artifactName: ${productName}-Setup-${version}.${ext}
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  installerHeaderIcon: build/icon.ico
   oneClick: false
   perMachine: false
   allowElevation: true
   allowToChangeInstallationDirectory: true
   deleteAppDataOnUninstall: false
   shortcutName: OddFix
+
+# Web installer: .exe pequeno que baixa o payload (.7z) do GitHub Release e instala.
+# Um clique = baixa + instala automático (herda ícone/config do nsis acima).
+nsisWeb:
+  # Nome SEM versão -> link permanente releases/latest/download/OddFix-Web-Setup.exe
+  artifactName: ${productName}-Web-Setup.${ext}
+  oneClick: true
+  perMachine: false
 
 # Auto-update source: public GitHub Releases (no token needed to download).
 publish:
