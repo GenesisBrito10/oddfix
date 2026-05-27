@@ -43,7 +43,10 @@ jobs:
           UPLOAD_BASE: https://oddfix.gbetss.com.br/downloads/upload
           UPLOAD_TOKEN: ${{ secrets.UPDATES_UPLOAD_TOKEN }}
         run: |
-          $files = Get-ChildItem -Path dist-electron -Recurse -Include *.exe,*.yml,*.blockmap,*.7z
+          # Só os artefatos distribuíveis — NÃO o app descompactado (win-unpacked/OddFix.exe
+          # tem 216MB e não é instalador) nem os arquivos internos/debug.
+          $files = Get-ChildItem -Path dist-electron -Recurse -Include *.exe,*.yml,*.blockmap,*.7z |
+            Where-Object { $_.FullName -notmatch '[\\/]win-unpacked[\\/]' -and $_.Name -notlike 'builder-*' }
           if (-not $files) { throw "no artifacts to upload" }
           foreach ($f in $files) {
             Write-Host "Uploading $($f.Name) ($([math]::Round($f.Length/1MB,1)) MB)"
