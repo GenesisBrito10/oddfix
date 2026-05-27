@@ -775,6 +775,9 @@ async function launchChromeWithUserProfile(payload = null) {
 }
 
 app.whenReady().then(() => {
+  // Match the NSIS appId so Windows ties the running app to the installed shortcut
+  // (correct taskbar/jump-list icon + grouping + notifications).
+  app.setAppUserModelId('com.oddfix.desktop')
   createWindow()
   setupAutoUpdates()
 
