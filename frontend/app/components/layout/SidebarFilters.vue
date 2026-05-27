@@ -62,6 +62,53 @@
         </div>
       </section>
 
+      <!-- % mínima por janela de tempo até o início (pré-live) -->
+      <section v-if="mode === 'pre-live'" class="fsection">
+        <div class="fsection-head">
+          <span class="fsection-label">% mínima nas próximas</span>
+          <button class="link-btn" @click="clearBrackets">Limpar lista</button>
+        </div>
+        <div class="bracket-grid">
+          <label v-for="b in TIME_BRACKETS" :key="b.id" class="bracket">
+            <span class="bracket-label">{{ b.label }}</span>
+            <input
+              class="bracket-input tnum"
+              type="number"
+              min="0"
+              max="100"
+              step="0.5"
+              inputmode="decimal"
+              :value="localFilters.minPercentByBracket[b.id] ?? 0"
+              @input="setBracketMin(b.id, $event)"
+            >
+          </label>
+        </div>
+        <div class="preset-row">
+          <button
+            v-for="i in 3"
+            :key="i"
+            class="preset-btn"
+            :class="{ filled: !!presets[i - 1] }"
+            :title="presets[i - 1] ? 'Clique: aplicar · botão direito: salvar atual' : 'Botão direito: salvar o atual neste slot'"
+            @click="loadPreset(i - 1)"
+            @contextmenu.prevent="savePreset(i - 1)"
+          >Filtro {{ i }}</button>
+        </div>
+        <p class="hint">Clique no Filtro pra aplicar · botão direito pra salvar o atual.</p>
+      </section>
+
+      <!-- Filtro de % máxima -->
+      <section class="fsection">
+        <label class="max-row">
+          <input v-model="localFilters.maxPercentEnabled" type="checkbox" @change="emitUpdate">
+          <span class="fsection-label">Filtro de % máxima</span>
+        </label>
+        <div v-if="localFilters.maxPercentEnabled" class="ttl-field">
+          <input v-model.number="localFilters.maxPercent" type="number" min="0" step="5" class="ttl-input tnum" @input="emitUpdate">
+          <span class="ttl-suffix">% máximo (esconde acima)</span>
+        </div>
+      </section>
+
       <!-- Sports -->
       <section class="fsection">
         <div class="fsection-head">
@@ -184,7 +231,7 @@
 <script setup lang="ts">
 import { Check, LogOut, Radar, Search, SlidersHorizontal, User } from 'lucide-vue-next'
 import type { FilterState } from '~/composables/useFilters'
-import { useAvailableSports } from '~/composables/useFilters'
+import { TIME_BRACKETS, useAvailableSports } from '~/composables/useFilters'
 import { useBookmakers } from '~/composables/useBookmakers'
 
 const props = defineProps<{ filters: FilterState; mode: 'pre-live' | 'live' }>()
@@ -197,11 +244,11 @@ onMounted(() => void loadBookmakers())
 const search = ref('')
 const quickStakes = [500, 1000, 3000, 5000]
 
-const localFilters = reactive<FilterState>({ ...props.filters, profitRange: [...props.filters.profitRange] as [number, number], selectedBookies: [...props.filters.selectedBookies], selectedSports: [...props.filters.selectedSports], disabledMarkets: [...props.filters.disabledMarkets] })
+const localFilters = reactive<FilterState>({ ...props.filters, profitRange: [...props.filters.profitRange] as [number, number], selectedBookies: [...props.filters.selectedBookies], selectedSports: [...props.filters.selectedSports], disabledMarkets: [...props.filters.disabledMarkets], minPercentByBracket: { ...props.filters.minPercentByBracket } })
 
 watch(
   () => props.filters,
-  (next) => Object.assign(localFilters, { ...next, profitRange: [...next.profitRange], selectedBookies: [...next.selectedBookies], selectedSports: [...next.selectedSports], disabledMarkets: [...next.disabledMarkets] }),
+  (next) => Object.assign(localFilters, { ...next, profitRange: [...next.profitRange], selectedBookies: [...next.selectedBookies], selectedSports: [...next.selectedSports], disabledMarkets: [...next.disabledMarkets], minPercentByBracket: { ...next.minPercentByBracket } }),
   { deep: true },
 )
 
@@ -212,7 +259,7 @@ const marketFilters = [
   { id: 'quartos', label: 'Desabilitar Mercado de Quartos' },
 ]
 
-const emitUpdate = () => emit('change', { ...localFilters, profitRange: [...localFilters.profitRange] as [number, number], selectedBookies: [...localFilters.selectedBookies], selectedSports: [...localFilters.selectedSports], disabledMarkets: [...localFilters.disabledMarkets] })
+const emitUpdate = () => emit('change', { ...localFilters, profitRange: [...localFilters.profitRange] as [number, number], selectedBookies: [...localFilters.selectedBookies], selectedSports: [...localFilters.selectedSports], disabledMarkets: [...localFilters.disabledMarkets], minPercentByBracket: { ...localFilters.minPercentByBracket } })
 
 // Money mask: digits are treated as cents and formatted pt-BR (1.500,00).
 const onInvestmentInput = (event: Event) => {
@@ -354,6 +401,53 @@ const toggleMarket = (id: string) => {
     ? localFilters.disabledMarkets.filter((market) => market !== id)
     : [...localFilters.disabledMarkets, id]
   emitUpdate()
+}
+
+// % mínima por janela de tempo (pré-live)
+const setBracketMin = (id: string, event: Event) => {
+  const value = Number((event.target as HTMLInputElement).value)
+  localFilters.minPercentByBracket = {
+    ...localFilters.minPercentByBracket,
+    [id]: Number.isFinite(value) && value > 0 ? value : 0,
+  }
+  emitUpdate()
+}
+
+const clearBrackets = () => {
+  localFilters.minPercentByBracket = {}
+  emitUpdate()
+}
+
+// Presets rápidos (Filtro 1/2/3) salvos em localStorage — clique aplica, botão direito salva.
+const PRESETS_KEY = 'oddfix_prelive_presets'
+const presets = ref<(Record<string, number> | null)[]>([null, null, null])
+
+onMounted(() => {
+  try {
+    const raw = localStorage.getItem(PRESETS_KEY)
+    const parsed = raw ? JSON.parse(raw) : null
+    if (Array.isArray(parsed)) {
+      presets.value = [parsed[0] ?? null, parsed[1] ?? null, parsed[2] ?? null]
+    }
+  } catch {
+    // ignora storage corrompido
+  }
+})
+
+const loadPreset = (index: number) => {
+  const preset = presets.value[index]
+  if (!preset) return
+  localFilters.minPercentByBracket = { ...preset }
+  emitUpdate()
+}
+
+const savePreset = (index: number) => {
+  presets.value[index] = { ...localFilters.minPercentByBracket }
+  try {
+    localStorage.setItem(PRESETS_KEY, JSON.stringify(presets.value))
+  } catch {
+    // ignora cota/indisponível
+  }
 }
 
 const loPct = computed(() => (localFilters.profitRange[0] / 30) * 100)
@@ -653,6 +747,81 @@ const rangeFillStyle = computed(() => ({
 .ttl-suffix {
   font-size: 12px;
   color: var(--muted);
+}
+
+/* % mínima por janela */
+.bracket-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+}
+.bracket {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--inner);
+}
+.bracket-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.bracket-input {
+  width: 46px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-xs);
+  background: var(--surface);
+  color: var(--text);
+  padding: 3px 4px;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: right;
+  outline: 0;
+}
+.bracket-input:focus {
+  border-color: var(--accent);
+}
+.preset-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+}
+.preset-btn {
+  padding: 6px 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.preset-btn.filled {
+  border-color: var(--border-mint-soft);
+  color: var(--accent);
+}
+.preset-btn:hover {
+  border-color: var(--border-mint-soft);
+  color: var(--text);
+}
+.max-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+.max-row input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
 }
 
 /* Sports */

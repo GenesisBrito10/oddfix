@@ -96,8 +96,8 @@ const setFilters = (next: FilterState) => {
 }
 
 const applyFilters = () => {
-  if (isLive.value) appliedLiveFilters.value = { ...liveFilters.value, profitRange: [...liveFilters.value.profitRange], selectedBookies: [...liveFilters.value.selectedBookies], selectedSports: [...liveFilters.value.selectedSports], disabledMarkets: [...liveFilters.value.disabledMarkets] }
-  else appliedPreLiveFilters.value = { ...preLiveFilters.value, profitRange: [...preLiveFilters.value.profitRange], selectedBookies: [...preLiveFilters.value.selectedBookies], selectedSports: [...preLiveFilters.value.selectedSports], disabledMarkets: [...preLiveFilters.value.disabledMarkets] }
+  if (isLive.value) appliedLiveFilters.value = { ...liveFilters.value, profitRange: [...liveFilters.value.profitRange], selectedBookies: [...liveFilters.value.selectedBookies], selectedSports: [...liveFilters.value.selectedSports], disabledMarkets: [...liveFilters.value.disabledMarkets], minPercentByBracket: { ...liveFilters.value.minPercentByBracket } }
+  else appliedPreLiveFilters.value = { ...preLiveFilters.value, profitRange: [...preLiveFilters.value.profitRange], selectedBookies: [...preLiveFilters.value.selectedBookies], selectedSports: [...preLiveFilters.value.selectedSports], disabledMarkets: [...preLiveFilters.value.disabledMarkets], minPercentByBracket: { ...preLiveFilters.value.minPercentByBracket } }
 }
 
 const handleMobileApply = () => {

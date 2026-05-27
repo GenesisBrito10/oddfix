@@ -179,6 +179,12 @@ const filteredData = computed(() => {
   data = data.filter((surebet) => !dismissedIds.value.has(surebet.id))
   data = data.filter((surebet) => surebet.legs.length === filters.options)
   data = data.filter((surebet) => surebet.profitPct >= filters.profitRange[0] && surebet.profitPct <= filters.profitRange[1])
+  // % mínima por janela de tempo até o início.
+  data = data.filter((surebet) => surebet.profitPct >= minPercentForStart(filters.minPercentByBracket, surebet.startsInMinutes))
+  // Corte de % máxima (esconde odds absurdas).
+  if (filters.maxPercentEnabled) {
+    data = data.filter((surebet) => surebet.profitPct <= filters.maxPercent)
+  }
   if ((filters.selectedSports?.length ?? 0) > 0) {
     data = data.filter((surebet) => !surebet.sport || filters.selectedSports.includes(surebet.sport))
   }

@@ -294,19 +294,9 @@ async function openCalcWindow(payload) {
     return
   }
 
-  // Largura: da borda esquerda até a METADE do primeiro card de jogos.
-  // (sidebar 304 + padding 28 da grade + meia largura do card). Constantes do layout
-  // do dashboard: grid 2 colunas acima de 1100px, senão 1 coluna.
+  // Canto superior ESQUERDO, altura cheia do monitor, largura confortável (não no meio).
   const { workArea } = screen.getPrimaryDisplay()
-  const SIDEBAR = 304
-  const GRID_PAD = 28
-  const GRID_GAP = 16
-  const mainWidth = Math.max(0, workArea.width - SIDEBAR)
-  const twoCols = workArea.width > 1100
-  const cardWidth = twoCols ? (mainWidth - GRID_PAD * 2 - GRID_GAP) / 2 : mainWidth - GRID_PAD * 2
-  const calcWidth = Math.round(
-    Math.min(workArea.width, Math.max(360, SIDEBAR + GRID_PAD + Math.max(0, cardWidth) / 2)),
-  )
+  const calcWidth = Math.min(820, workArea.width)
 
   calcWindow = new BrowserWindow({
     width: calcWidth,
