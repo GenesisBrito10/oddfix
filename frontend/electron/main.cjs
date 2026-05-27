@@ -294,15 +294,26 @@ async function openCalcWindow(payload) {
     return
   }
 
+  // Largura: da borda esquerda até a METADE do primeiro card de jogos.
+  // (sidebar 304 + padding 28 da grade + meia largura do card). Constantes do layout
+  // do dashboard: grid 2 colunas acima de 1100px, senão 1 coluna.
   const { workArea } = screen.getPrimaryDisplay()
-  const calcWidth = Math.min(900, workArea.width)
+  const SIDEBAR = 304
+  const GRID_PAD = 28
+  const GRID_GAP = 16
+  const mainWidth = Math.max(0, workArea.width - SIDEBAR)
+  const twoCols = workArea.width > 1100
+  const cardWidth = twoCols ? (mainWidth - GRID_PAD * 2 - GRID_GAP) / 2 : mainWidth - GRID_PAD * 2
+  const calcWidth = Math.round(
+    Math.min(workArea.width, Math.max(360, SIDEBAR + GRID_PAD + Math.max(0, cardWidth) / 2)),
+  )
 
   calcWindow = new BrowserWindow({
     width: calcWidth,
     height: workArea.height,
-    x: workArea.x + Math.max(0, Math.floor((workArea.width - calcWidth) / 2)),
+    x: workArea.x,
     y: workArea.y,
-    minWidth: 520,
+    minWidth: 360,
     minHeight: 520,
     title: 'OddFix · Calculadora',
     backgroundColor: '#0d1117',
