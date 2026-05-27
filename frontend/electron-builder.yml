@@ -50,10 +50,12 @@ nsis:
 nsisWeb:
   # Nome SEM versão -> link permanente releases/latest/download/OddFix-Web-Setup.exe
   artifactName: ${productName}-Web-Setup.${ext}
-  oneClick: true
+  # Assistido (NÃO oneClick): mostra boas-vindas, progresso do download/instalação e a
+  # tela final "concluído" com opção de abrir — mantém o usuário informado o tempo todo.
+  oneClick: false
   perMachine: false
-  # oneClick installer can't let the user choose the dir — must disable (herdado do nsis).
   allowToChangeInstallationDirectory: false
+  runAfterFinish: true
 
 # Auto-update source: public GitHub Releases (no token needed to download).
 publish:
