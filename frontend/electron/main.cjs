@@ -294,11 +294,16 @@ async function openCalcWindow(payload) {
     return
   }
 
+  const { workArea } = screen.getPrimaryDisplay()
+  const calcWidth = Math.min(900, workArea.width)
+
   calcWindow = new BrowserWindow({
-    width: 820,
-    height: 960,
-    minWidth: 560,
-    minHeight: 600,
+    width: calcWidth,
+    height: workArea.height,
+    x: workArea.x + Math.max(0, Math.floor((workArea.width - calcWidth) / 2)),
+    y: workArea.y,
+    minWidth: 520,
+    minHeight: 520,
     title: 'OddFix · Calculadora',
     backgroundColor: '#0d1117',
     icon: path.join(__dirname, 'icon.png'),
