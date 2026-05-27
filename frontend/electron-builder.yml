@@ -57,9 +57,9 @@ nsisWeb:
   allowToChangeInstallationDirectory: false
   runAfterFinish: true
 
-# Auto-update source: public GitHub Releases (no token needed to download).
+# Auto-update source: our own domain (generic). app-update.yml ships this URL — NOT
+# the GitHub repo. Repo can stay private; the backend serves /downloads. The CI uploads
+# the artifacts (electron-builder does not upload to a generic provider).
 publish:
-  provider: github
-  owner: GenesisBrito10
-  repo: oddfix
-  releaseType: release
+  provider: generic
+  url: https://oddfix.gbetss.com.br/downloads

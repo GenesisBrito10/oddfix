@@ -1,7 +1,7 @@
 name: Release Desktop
 
-# Push a tag like v0.1.0 to build the Windows installer and publish it (plus the
-# auto-update metadata latest.yml) to a GitHub Release.
+# Push a tag like v0.1.0 to build the Windows installer + auto-update metadata and
+# upload everything to our own backend (/downloads). Nothing is published to GitHub.
 on:
   push:
     tags:
@@ -10,8 +10,6 @@ on:
 jobs:
   build-windows:
     runs-on: windows-latest
-    permissions:
-      contents: write
     defaults:
       run:
         working-directory: frontend
@@ -30,10 +28,29 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # nuxt build + electron-builder; publishes to GitHub Releases of this repo.
-      - run: pnpm electron:release
+      # Build installers + latest.yml (no GitHub publish — generic provider).
+      - run: pnpm electron:build
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Backend origin baked into the build (GitHub repo secret). Not a secrecy
-          # measure — keep auth/rate-limit on the backend.
+          # Backend origin baked into the build. Not a secrecy measure — keep
+          # auth/rate-limit on the backend.
           ODDFIX_BACKEND_URL: ${{ secrets.ODDFIX_BACKEND_URL }}
+
+      # Upload artifacts to the backend (/downloads). The desktop updater + web
+      # installer fetch them from there; the GitHub repo never appears in the app.
+      - name: Upload to backend
+        shell: pwsh
+        env:
+          UPLOAD_BASE: https://oddfix.gbetss.com.br/downloads/upload
+          UPLOAD_TOKEN: ${{ secrets.UPDATES_UPLOAD_TOKEN }}
+        run: |
+          $files = Get-ChildItem -Path dist-electron -Recurse -Include *.exe,*.yml,*.blockmap,*.7z
+          if (-not $files) { throw "no artifacts to upload" }
+          foreach ($f in $files) {
+            Write-Host "Uploading $($f.Name) ($([math]::Round($f.Length/1MB,1)) MB)"
+            curl.exe -sS -f -X PUT "$env:UPLOAD_BASE/$($f.Name)" `
+              -H "x-upload-token: $env:UPLOAD_TOKEN" `
+              -H "Content-Type: application/octet-stream" `
+              --data-binary "@$($f.FullName)"
+            if ($LASTEXITCODE -ne 0) { throw "upload failed: $($f.Name)" }
+          }
+          Write-Host "All artifacts uploaded."

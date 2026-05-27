@@ -12,6 +12,7 @@ import { BetburgerModule } from './modules/betburger/betburger.module';
 import { RegisteredSurebetsModule } from './modules/registered-surebets/registered-surebets.module';
 import { SchedulerModule } from './modules/scheduler/scheduler.module';
 import { SurebetsCurrentModule } from './modules/surebets-current/surebets-current.module';
+import { UpdatesModule } from './modules/updates/updates.module';
 import { UsersModule } from './modules/users/users.module';
 
 @Module({
@@ -42,6 +43,7 @@ import { UsersModule } from './modules/users/users.module';
     SurebetsCurrentModule,
     RegisteredSurebetsModule,
     SchedulerModule,
+    UpdatesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
