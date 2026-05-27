@@ -47,6 +47,7 @@ declare global {
       onBookmakerClick?: (callback: (payload: BookmakerClickPayload) => void) => () => void
       onUpdate?: (callback: (payload: UpdatePayload) => void) => () => void
       installUpdate?: () => Promise<void>
+      openCalculator?: (id: string, type?: 'live' | 'prematch') => Promise<void>
     }
   }
 }

@@ -1,7 +1,7 @@
 <template>
   <article
     class="op-card"
-    :class="{ hot, live: isLive }"
+    :class="{ hot, live: isLive, stale }"
     @click="$emit('select', surebet)"
   >
     <div v-if="hot" class="hot-rim" />
@@ -16,6 +16,7 @@
             <span v-if="away">{{ away }}</span>
           </h3>
           <span class="badge-pill neutral"><ShieldCheck :size="10" /> {{ isLive ? 'Ao vivo' : 'Pré-live' }}</span>
+          <span v-if="stale" class="badge-pill amber"><Clock :size="10" /> Saindo<template v-if="expiringIn"> {{ expiringIn }}s</template></span>
         </div>
         <div class="meta">
           <span class="meta-league"><span class="league-dot" />{{ surebet.league }}</span>
@@ -86,11 +87,11 @@
 </template>
 
 <script setup lang="ts">
-import { ChevronRight, ExternalLink, Flame, ShieldCheck, Trash2 } from 'lucide-vue-next'
+import { ChevronRight, Clock, ExternalLink, Flame, ShieldCheck, Trash2 } from 'lucide-vue-next'
 import type { BetLeg, Surebet } from '~/data/surebets'
 import { formatCurrency } from '~/data/surebets'
 
-const props = defineProps<{ surebet: Surebet; isLive?: boolean; investment?: number; hot?: boolean }>()
+const props = defineProps<{ surebet: Surebet; isLive?: boolean; investment?: number; hot?: boolean; stale?: boolean; expiringIn?: number }>()
 defineEmits<{ select: [surebet: Surebet]; dismiss: [id: string] }>()
 const { openSurebetBookmakers } = useDesktopBookmakers()
 
@@ -148,6 +149,15 @@ const openAllBooks = () => {
   inset: 0;
   pointer-events: none;
   background: radial-gradient(120% 80% at 100% 0%, rgba(32, 230, 154, 0.08), transparent 50%);
+}
+
+/* Expirando: sumiu do feed, ainda dentro do TTL */
+.op-card.stale {
+  border-color: rgba(246, 199, 107, 0.5);
+  background: linear-gradient(180deg, rgba(246, 199, 107, 0.07) 0%, var(--surface) 70%);
+}
+.op-card.stale .odd {
+  color: var(--amber, #f6c76b);
 }
 
 /* Header */

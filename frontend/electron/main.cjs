@@ -249,11 +249,76 @@ function createWindow() {
 }
 
 function sendToRenderer(channel, payload) {
-  if (!mainWindow || mainWindow.isDestroyed()) {
+  // Broadcast to every window (main + calculator) so captured clicks/status reach all.
+  for (const win of BrowserWindow.getAllWindows()) {
+    if (!win.isDestroyed()) {
+      win.webContents.send(channel, payload)
+    }
+  }
+}
+
+async function getRendererBase() {
+  if (app.isPackaged) {
+    return embeddedUrl || (await startEmbeddedServer())
+  }
+  return process.env.ODDFIX_RENDERER_URL || process.env.ELECTRON_RENDERER_URL || 'http://localhost:3000'
+}
+
+let calcWindow = null
+
+// Open the calculator in a SEPARATE OS window (draggable to a 2nd monitor). It loads
+// /calculadora and pulls its own live feed (same backend/session) so odds stay live.
+async function openCalcWindow(payload) {
+  const id = payload && payload.id
+  if (!id) {
+    return
+  }
+  const type = payload.type === 'live' ? 'live' : 'prematch'
+
+  let base
+  try {
+    base = await getRendererBase()
+  } catch {
+    return
+  }
+  if (!base) {
     return
   }
 
-  mainWindow.webContents.send(channel, payload)
+  const url = `${base}/calculadora?id=${encodeURIComponent(id)}&type=${type}`
+
+  if (calcWindow && !calcWindow.isDestroyed()) {
+    calcWindow.loadURL(url)
+    calcWindow.show()
+    calcWindow.focus()
+    return
+  }
+
+  calcWindow = new BrowserWindow({
+    width: 480,
+    height: 860,
+    minWidth: 380,
+    minHeight: 520,
+    title: 'OddFix · Calculadora',
+    backgroundColor: '#0d1117',
+    icon: path.join(__dirname, 'icon.png'),
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.cjs'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: false,
+      devTools: process.env.ODDFIX_DEBUG === '1',
+    },
+  })
+  calcWindow.removeMenu()
+  calcWindow.loadURL(url)
+  calcWindow.webContents.setWindowOpenHandler(({ url: target }) => {
+    shell.openExternal(target)
+    return { action: 'deny' }
+  })
+  calcWindow.on('closed', () => {
+    calcWindow = null
+  })
 }
 
 function sendStatus(site, state, message) {
@@ -804,6 +869,8 @@ ipcMain.handle('oddfix-open-site', async (_event, siteKey) => {
     return
   }
 })
+
+ipcMain.handle('oddfix-open-calculator', (_event, payload) => openCalcWindow(payload || {}))
 
 // User clicked "Reiniciar agora" on the update toast.
 ipcMain.handle('oddfix-install-update', () => {

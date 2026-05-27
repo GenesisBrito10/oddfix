@@ -29,4 +29,5 @@ contextBridge.exposeInMainWorld('oddfixElectron', {
     return () => ipcRenderer.removeListener('oddfix-update', listener)
   },
   installUpdate: () => ipcRenderer.invoke('oddfix-install-update'),
+  openCalculator: (id, type) => ipcRenderer.invoke('oddfix-open-calculator', { id, type }),
 })

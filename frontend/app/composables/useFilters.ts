@@ -8,7 +8,8 @@ export interface FilterState {
   selectedBookies: string[]
   selectedSports: string[]
   disabledMarkets: string[]
-  profitDecayTolerance: number
+  // Segundos que um jogo continua na tela após sumir do snapshot do backend.
+  gameTtlSeconds: number
 }
 
 export const defaultFilters = (): FilterState => ({
@@ -22,7 +23,7 @@ export const defaultFilters = (): FilterState => ({
   // Empty = all sports. Populated from the live data via useAvailableSports().
   selectedSports: [],
   disabledMarkets: [],
-  profitDecayTolerance: 50,
+  gameTtlSeconds: 30,
 })
 
 // Sports present in the current snapshot — pages fill this from their surebets so
@@ -44,7 +45,7 @@ export const activeFilterCount = (filters: FilterState, isLive: boolean) => {
   if (filters.selectedBookies.length > 0) count++
   if ((filters.selectedSports?.length ?? 0) > 0) count++
   count += filters.disabledMarkets.length
-  if (isLive && filters.profitDecayTolerance !== defaults.profitDecayTolerance) count++
+  if ((filters.gameTtlSeconds ?? defaults.gameTtlSeconds) !== defaults.gameTtlSeconds) count++
 
   return count
 }

@@ -5,7 +5,7 @@
         <SlidersHorizontal :size="14" />
         <span>Filtros</span>
       </div>
-      <span class="sidebar-version">v0.1.12</span>
+      <span class="sidebar-version">v0.1.13</span>
     </div>
 
     <div class="sidebar-scroll ofx-scroll">
@@ -86,14 +86,17 @@
         </div>
       </section>
 
-      <!-- Live: decay tolerance -->
-      <section v-if="mode === 'live'" class="fsection">
+      <!-- Tempo de vida do jogo (TTL) -->
+      <section class="fsection">
         <div class="fsection-head">
-          <span class="fsection-label">Tolerância de queda</span>
-          <span class="range-value tnum">{{ localFilters.profitDecayTolerance }}%</span>
+          <span class="fsection-label">Tempo de vida do jogo</span>
+          <span class="range-value tnum">{{ localFilters.gameTtlSeconds }}s</span>
         </div>
-        <input v-model.number="localFilters.profitDecayTolerance" type="range" min="10" max="90" step="5" class="single-range" @input="emitUpdate">
-        <p class="hint">Ex: sinal a 5% lucro é removido ao cair para {{ decayExample }}%</p>
+        <div class="ttl-field">
+          <input v-model.number="localFilters.gameTtlSeconds" type="number" min="0" max="300" step="5" class="ttl-input tnum" @input="emitUpdate">
+          <span class="ttl-suffix">segundos</span>
+        </div>
+        <p class="hint">Jogos que somem do feed ficam +{{ localFilters.gameTtlSeconds }}s na tela (em amarelo) antes de sair.</p>
       </section>
 
       <!-- Bookmakers -->
@@ -359,8 +362,6 @@ const rangeFillStyle = computed(() => ({
   left: `${loPct.value}%`,
   right: `${100 - hiPct.value}%`,
 }))
-
-const decayExample = computed(() => (5 * (1 - localFilters.profitDecayTolerance / 100)).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 2 }))
 </script>
 
 <style scoped>
@@ -627,6 +628,31 @@ const decayExample = computed(() => (5 * (1 - localFilters.profitDecayTolerance 
 .single-range {
   width: 100%;
   accent-color: var(--accent);
+}
+
+/* TTL */
+.ttl-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ttl-input {
+  width: 92px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: var(--inner);
+  color: var(--text);
+  padding: 8px 10px;
+  font-size: 15px;
+  font-weight: 700;
+  outline: 0;
+}
+.ttl-input:focus {
+  border-color: var(--accent);
+}
+.ttl-suffix {
+  font-size: 12px;
+  color: var(--muted);
 }
 
 /* Sports */

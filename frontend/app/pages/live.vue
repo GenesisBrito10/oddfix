@@ -72,7 +72,9 @@
         :investment="investmentValue"
         :hot="index === 0"
         is-live
-        @select="selectedId = $event.id"
+        :stale="surebet.stale"
+        :expiring-in="surebet.expiresInSeconds"
+        @select="openDetail"
         @dismiss="dismiss"
       />
       <div v-if="filteredData.length === 0" class="empty-state">
@@ -97,6 +99,19 @@ const selectedId = ref<string | null>(null)
 const selectedSnapshot = ref<Surebet | null>(null)
 const dismissedIds = ref<Set<string>>(new Set())
 const { surebets } = useSurebetsApi('live')
+
+// Keep games on screen for gameTtlSeconds after they leave the snapshot (yellow card).
+const ttlSeconds = computed(() => appliedFilters.value.gameTtlSeconds ?? 30)
+const retained = useTtlSurebets(surebets, ttlSeconds)
+
+// Open the calculator: a separate OS window on desktop, the in-app modal on web.
+const openDetail = (surebet: Surebet) => {
+  if (import.meta.client && window.oddfixElectron?.openCalculator) {
+    void window.oddfixElectron.openCalculator(surebet.id, 'live')
+  } else {
+    selectedId.value = surebet.id
+  }
+}
 
 // Sports present in the current snapshot → feeds the sidebar's sport filter.
 const availableSports = useAvailableSports()
@@ -153,7 +168,7 @@ const stakeLabel = computed(() =>
 )
 
 const filteredData = computed(() => {
-  let data = [...(surebets.value ?? [])]
+  let data = [...(retained.value ?? [])]
   const filters = appliedFilters.value
 
   data = data.filter((surebet) => !dismissedIds.value.has(surebet.id))
@@ -168,10 +183,6 @@ const filteredData = computed(() => {
   } else {
     data = data.filter((surebet) => surebet.legs.every((leg) => filters.selectedBookies.includes(leg.bookmaker)))
   }
-  data = data.filter((surebet) => {
-    if (!surebet.openingProfitPct) return true
-    return surebet.profitPct >= surebet.openingProfitPct * (1 - filters.profitDecayTolerance / 100)
-  })
 
   if (filters.sortBy === 'profit') data.sort((a, b) => b.profitPct - a.profitPct)
   if (filters.sortBy === 'recent') data.reverse()
