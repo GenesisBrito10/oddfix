@@ -16,7 +16,7 @@
             <span v-if="away">{{ away }}</span>
           </h3>
           <span class="badge-pill neutral"><ShieldCheck :size="10" /> {{ isLive ? 'Ao vivo' : 'Pré-live' }}</span>
-          <span v-if="stale" class="badge-pill amber"><Clock :size="10" /> Saindo<template v-if="expiringIn"> {{ expiringIn }}s</template></span>
+          <span v-if="stale" class="badge-pill amber"><Clock :size="10" /> Saindo <template v-if="expiringIn"> {{ expiringIn }}s</template></span>
         </div>
         <div class="meta">
           <span class="meta-league"><span class="league-dot" />{{ surebet.league }}</span>

@@ -295,10 +295,10 @@ async function openCalcWindow(payload) {
   }
 
   calcWindow = new BrowserWindow({
-    width: 480,
-    height: 860,
-    minWidth: 380,
-    minHeight: 520,
+    width: 820,
+    height: 960,
+    minWidth: 560,
+    minHeight: 600,
     title: 'OddFix · Calculadora',
     backgroundColor: '#0d1117',
     icon: path.join(__dirname, 'icon.png'),
