@@ -5,7 +5,7 @@
         <SlidersHorizontal :size="14" />
         <span>Filtros</span>
       </div>
-      <span class="sidebar-version">v0.1.14</span>
+      <span class="sidebar-version">v0.1.15</span>
     </div>
 
     <div class="sidebar-scroll ofx-scroll">
