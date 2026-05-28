@@ -33,15 +33,6 @@
         </div>
       </section>
 
-      <!-- Options -->
-      <section class="fsection">
-        <div class="fsection-head"><span class="fsection-label">Quantidade de opções</span></div>
-        <div class="seg">
-          <button :class="{ active: localFilters.options === 2 }" @click="setOptions(2)">2 opções</button>
-          <button :class="{ active: localFilters.options === 3 }" @click="setOptions(3)">3 opções</button>
-        </div>
-      </section>
-
       <!-- Profit range -->
       <section class="fsection">
         <div class="fsection-head">
@@ -178,21 +169,6 @@
         <p v-if="bookmakerNames.length === 0" class="hint">Nenhuma casa carregada. Inicie o backend.</p>
       </section>
 
-      <!-- Markets -->
-      <section class="fsection">
-        <div class="fsection-head"><span class="fsection-label">Filtros de mercado</span></div>
-        <button
-          v-for="item in marketFilters"
-          :key="item.id"
-          class="market-toggle"
-          :class="{ active: localFilters.disabledMarkets.includes(item.id) }"
-          @click="toggleMarket(item.id)"
-        >
-          <span class="check-box"><Check v-if="localFilters.disabledMarkets.includes(item.id)" :size="10" /></span>
-          {{ item.label }}
-        </button>
-      </section>
-
       <!-- Sort -->
       <section class="fsection">
         <div class="fsection-head"><span class="fsection-label">Ordenação</span></div>
@@ -202,18 +178,6 @@
           <option value="start">Próximo início</option>
         </select>
       </section>
-
-      <!-- Scanner status -->
-      <div class="scanner-panel">
-        <div class="scanner-panel-head">
-          <Radar :size="14" />
-          <span>Scanner ativo</span>
-          <span class="scanner-spacer" />
-          <span class="pulse-dot" />
-        </div>
-        <div class="scanner-row"><span>Última leitura</span><span class="tnum">há 2s</span></div>
-        <div class="scanner-row"><span>Latência média</span><span class="tnum">184 ms</span></div>
-      </div>
 
       <button class="btn btn-primary apply-btn" @click="$emit('apply')">
         Filtrar Resultados
@@ -229,7 +193,7 @@
 </template>
 
 <script setup lang="ts">
-import { Check, LogOut, Radar, Search, SlidersHorizontal, User } from 'lucide-vue-next'
+import { LogOut, Search, SlidersHorizontal, User } from 'lucide-vue-next'
 import type { FilterState } from '~/composables/useFilters'
 import { TIME_BRACKETS, useAvailableSports } from '~/composables/useFilters'
 import { useBookmakers } from '~/composables/useBookmakers'
@@ -251,13 +215,6 @@ watch(
   (next) => Object.assign(localFilters, { ...next, profitRange: [...next.profitRange], selectedBookies: [...next.selectedBookies], selectedSports: [...next.selectedSports], disabledMarkets: [...next.disabledMarkets], minPercentByBracket: { ...next.minPercentByBracket } }),
   { deep: true },
 )
-
-const marketFilters = [
-  { id: 'handicap-gols', label: 'Desabilitar Handicap de Gols' },
-  { id: 'escanteios', label: 'Desabilitar Escanteios' },
-  { id: 'reembolso-gols-hc', label: 'Desabilitar sinais com reembolso' },
-  { id: 'quartos', label: 'Desabilitar Mercado de Quartos' },
-]
 
 const emitUpdate = () => emit('change', { ...localFilters, profitRange: [...localFilters.profitRange] as [number, number], selectedBookies: [...localFilters.selectedBookies], selectedSports: [...localFilters.selectedSports], disabledMarkets: [...localFilters.disabledMarkets], minPercentByBracket: { ...localFilters.minPercentByBracket } })
 
@@ -372,11 +329,6 @@ const toggleAllBookies = () => {
   emitUpdate()
 }
 
-const setOptions = (value: 2 | 3) => {
-  localFilters.options = value
-  emitUpdate()
-}
-
 const setProfitMin = (event: Event) => {
   const value = Math.min(Number((event.target as HTMLInputElement).value), localFilters.profitRange[1] - 0.5)
   localFilters.profitRange = [value, localFilters.profitRange[1]]
@@ -393,13 +345,6 @@ const toggleBookie = (name: string) => {
   localFilters.selectedBookies = localFilters.selectedBookies.includes(name)
     ? localFilters.selectedBookies.filter((bookie) => bookie !== name)
     : [...localFilters.selectedBookies, name]
-  emitUpdate()
-}
-
-const toggleMarket = (id: string) => {
-  localFilters.disabledMarkets = localFilters.disabledMarkets.includes(id)
-    ? localFilters.disabledMarkets.filter((market) => market !== id)
-    : [...localFilters.disabledMarkets, id]
   emitUpdate()
 }
 
