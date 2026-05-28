@@ -248,6 +248,23 @@ a {
   border-color: var(--accent);
 }
 
+/* Kill the ugly native number spinners app-wide (the white up/down arrows). */
+input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+/* Dark color scheme so the field chrome never renders white. */
+input,
+select,
+textarea {
+  color-scheme: dark;
+}
+
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

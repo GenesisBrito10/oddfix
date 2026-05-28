@@ -55,6 +55,11 @@
           </button>
         </div>
 
+        <label class="signal-search">
+          <Search :size="14" />
+          <input v-model="search" placeholder="Buscar time, evento, liga...">
+        </label>
+
         <div class="strip-divider" />
 
         <div class="strip-sort">
@@ -93,7 +98,7 @@
 </template>
 
 <script setup lang="ts">
-import { ChevronDown, Clock, Flame, LayoutGrid, List, Star, TrendingUp, Wallet, Zap } from 'lucide-vue-next'
+import { ChevronDown, Clock, Flame, LayoutGrid, List, Search, Star, TrendingUp, Wallet, Zap } from 'lucide-vue-next'
 import SurebetCard from '~/components/dashboard/SurebetCard.vue'
 import SurebetDetailModal from '~/components/dashboard/SurebetDetailModal.vue'
 import type { Surebet } from '~/data/surebets'
@@ -157,6 +162,7 @@ const onModalDismiss = () => {
 
 const view = ref<'grid' | 'list'>('grid')
 const activeChip = ref('all')
+const search = ref('')
 const chips = [
   { id: 'all', label: 'Todos', icon: null },
   { id: 'top', label: 'Maior lucro', icon: Flame },
@@ -177,6 +183,10 @@ const filteredData = computed(() => {
   const filters = appliedFilters.value
 
   data = data.filter((surebet) => !dismissedIds.value.has(surebet.id))
+  if (search.value.trim()) {
+    const query = search.value.trim().toLowerCase()
+    data = data.filter((surebet) => `${surebet.game} ${surebet.league} ${surebet.sport}`.toLowerCase().includes(query))
+  }
   data = data.filter((surebet) => surebet.legs.length === filters.options)
   data = data.filter((surebet) => surebet.profitPct >= filters.profitRange[0] && surebet.profitPct <= filters.profitRange[1])
   // % mínima por janela de tempo até o início.
@@ -374,6 +384,30 @@ const maxProfit = computed(() => {
   width: 1px;
   height: 22px;
   background: var(--line);
+}
+
+.signal-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 180px;
+  max-width: 320px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--inner);
+  color: var(--t3);
+}
+
+.signal-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 12.5px;
 }
 
 .strip-sort {
